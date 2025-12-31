@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fertilizer Calculator / खत कॅल्क्युलेटर</title>
+    <style>
+        /* CSS Styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f7f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 400px;
+            border-top: 5px solid #2e7d32;
+            position: relative;
+        }
+        /* Language Selector Styling */
+        .lang-switch {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+        }
+        .lang-switch select {
+            padding: 5px;
+            border: 1px solid #2e7d32;
+            color: #2e7d32;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        h2 { color: #2e7d32; text-align: center; margin-bottom: 20px; margin-top: 10px;}
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        
+        select.main-input, input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+        button:hover { background-color: #1b5e20; }
+        
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 6px;
+            display: none;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .disclaimer {
+            font-size: 11px;
+            color: #777;
+            margin-top: 15px;
+            text-align: center;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="lang-switch">
+        <select id="languageSelect" onchange="changeLanguage()">
+            <option value="en">English</option>
+            <option value="mr">मराठी</option>
+        </select>
+    </div>
+
+    <h2 id="lbl_title">Fertilizer Calculator</h2>
+    
+    <div class="input-group">
+        <label id="lbl_crop" for="crop">Select Crop Type</label>
+        <select id="crop" class="main-input">
+            <option id="opt_corn" value="corn">Corn (Maize)</option>
+            <option id="opt_wheat" value="wheat">Wheat</option>
+            <option id="opt_rice" value="rice">Rice</option>
+            <option id="opt_other" value="other">Other / General</option>
+        </select>
+    </div>
+
+    <div class="input-group">
+        <label id="lbl_land" for="landSize">Land Size (Hectares)</label>
+        <input type="number" id="landSize" placeholder="e.g., 5.5" step="0.1" min="0">
+    </div>
+
+    <button id="btn_calc" onclick="calculateFertilizer()">Calculate Dosage</button>
+
+    <div id="result">
+        <h4 id="lbl_resultTitle" style="margin-top: 0; color: #2e7d32;">Recommended Nutrients (kg)</h4>
+        <div class="result-item"><span id="lbl_n">Nitrogen (N):</span> <strong id="resN">0</strong></div>
+        <div class="result-item"><span id="lbl_p">Phosphate (P₂O₅):</span> <strong id="resP">0</strong></div>
+        <div class="result-item"><span id="lbl_k">Potash (K₂O):</span> <strong id="resK">0</strong></div>
+        <hr>
+        <div class="result-item"><span id="lbl_total">Total Mass:</span> <strong id="resTotal">0</strong></div>
+    </div>
+    
+    <div id="lbl_disclaimer" class="disclaimer">
+        *Values represent pure nutrient mass. Actual fertilizer product weight will be higher.
+    </div>
+</div>
+
+<script>
+    // --- Translation Data ---
+    const translations = {
+        en: {
+            title: "Fertilizer Calculator",
+            lbl_crop: "Select Crop Type",
+            opt_corn: "Corn (Maize)",
+            opt_wheat: "Wheat",
+            opt_rice: "Rice",
+            opt_other: "Other / General",
+            lbl_land: "Land Size (Hectares)",
+            btn_calc: "Calculate Dosage",
+            lbl_resultTitle: "Recommended Nutrients (kg)",
+            lbl_n: "Nitrogen (N):",
+            lbl_p: "Phosphate (P₂O₅):",
+            lbl_k: "Potash (K₂O):",
+            lbl_total: "Total Mass:",
+            lbl_disclaimer: "*Values represent pure nutrient mass. Actual fertilizer product weight will be higher.",
+            alert_msg: "Please enter a valid positive number for land size."
+        },
+        mr: {
+            title: "खत मात्रा कॅल्क्युलेटर",
+            lbl_crop: "पीक निवडा",
+            opt_corn: "मका",
+            opt_wheat: "गहू",
+            opt_rice: "भात (तांदूळ)",
+            opt_other: "इतर / सामान्य",
+            lbl_land: "जमिनीचे क्षेत्रफळ (हेक्टर)",
+            btn_calc: "मात्रा मोजा (Calculate)",
+            lbl_resultTitle: "शिफारस केलेली पोषक तत्वे (किलो)",
+            lbl_n: "नायट्रोजन (N):",
+            lbl_p: "फॉस्फेट (P₂O₅):",
+            lbl_k: "पोटॅश (K₂O):",
+            lbl_total: "एकूण वजन:",
+            lbl_disclaimer: "*टीप: वरील मूल्ये शुद्ध पोषक तत्वे दर्शवतात. प्रत्यक्ष खताचे वजन वेगळे असू शकते.",
+            alert_msg: "कृपया जमिनीच्या क्षेत्रफळासाठी वैध क्रमांक टाका."
+        }
+    };
+
+    // --- Language Switcher Function ---
+    function changeLanguage() {
+        const lang = document.getElementById('languageSelect').value;
+        const t = translations[lang];
+
+        // Update Text Content
+        document.getElementById('lbl_title').innerText = t.title;
+        document.getElementById('lbl_crop').innerText = t.lbl_crop;
+        document.getElementById('opt_corn').innerText = t.opt_corn;
+        document.getElementById('opt_wheat').innerText = t.opt_wheat;
+        document.getElementById('opt_rice').innerText = t.opt_rice;
+        document.getElementById('opt_other').innerText = t.opt_other;
+        document.getElementById('lbl_land').innerText = t.lbl_land;
+        document.getElementById('btn_calc').innerText = t.btn_calc;
+        document.getElementById('lbl_resultTitle').innerText = t.lbl_resultTitle;
+        document.getElementById('lbl_n').innerText = t.lbl_n;
+        document.getElementById('lbl_p').innerText = t.lbl_p;
+        document.getElementById('lbl_k').innerText = t.lbl_k;
+        document.getElementById('lbl_total').innerText = t.lbl_total;
+        document.getElementById('lbl_disclaimer').innerText = t.lbl_disclaimer;
+    }
+
+    // --- Calculation Logic ---
+    function calculateFertilizer() {
+        // Get current language for alert messages
+        const lang = document.getElementById('languageSelect').value;
+        
+        const crop = document.getElementById('crop').value;
+        const landSize = parseFloat(document.getElementById('landSize').value);
+        const resultDiv = document.getElementById('result');
+
+        // Validation
+        if (isNaN(landSize) || landSize <= 0) {
+            alert(translations[lang].alert_msg);
+            resultDiv.style.display = 'none';
+            return;
+        }
+
+        // Define Rates (kg/ha)
+        let nRate = 0, pRate = 0, kRate = 0;
+
+        switch(crop) {
+            case 'corn':  nRate = 150; pRate = 70; kRate = 50; break;
+            case 'wheat': nRate = 120; pRate = 60; kRate = 40; break;
+            case 'rice':  nRate = 100; pRate = 50; kRate = 30; break;
+            default:      nRate = 50;  pRate = 25; kRate = 25; break;
+        }
+
+        // Calculate
+        const totalN = (nRate * landSize).toFixed(2);
+        const totalP = (pRate * landSize).toFixed(2);
+        const totalK = (kRate * landSize).toFixed(2);
+        const totalMass = (parseFloat(totalN) + parseFloat(totalP) + parseFloat(totalK)).toFixed(2);
+
+        // Update UI Results
+        document.getElementById('resN').innerText = totalN + " kg";
+        document.getElementById('resP').innerText = totalP + " kg";
+        document.getElementById('resK').innerText = totalK + " kg";
+        document.getElementById('resTotal').innerText = totalMass + " kg";
+
+        resultDiv.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
